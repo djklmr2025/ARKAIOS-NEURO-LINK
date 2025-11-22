@@ -1,0 +1,8 @@
+{
+  "name": "Arkaios Neural Agent",
+  "description": "A next-generation AI interface capable of analyzing screen context and interacting via the Arkaios ecosystem protocols. Built with Gemini 2.5 Flash for high-speed vision capabilities.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
