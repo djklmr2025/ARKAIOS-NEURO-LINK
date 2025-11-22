@@ -1,7 +1,8 @@
 export enum MessageRole {
   USER = 'user',
   MODEL = 'model',
-  SYSTEM = 'system'
+  SYSTEM = 'system',
+  TOOL = 'tool'
 }
 
 export interface Message {
@@ -10,6 +11,8 @@ export interface Message {
   text: string;
   timestamp: number;
   attachments?: string[]; // Base64 strings
+  functionCalls?: any[];
+  functionResponses?: any[];
 }
 
 export interface SystemStatus {
@@ -22,5 +25,11 @@ export interface SystemStatus {
 export enum NeuralMode {
   CHAT = 'CHAT',
   VISION = 'VISION', // Screen analysis
-  COMMAND = 'COMMAND' // Future: execution
+  WORKSPACE = 'WORKSPACE' // File system access
+}
+
+export interface FileSystemState {
+  handle: any | null; // FileSystemDirectoryHandle
+  path: string | null;
+  permission: 'granted' | 'denied' | 'prompt';
 }
