@@ -19,6 +19,7 @@ const App: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   // File System State
   const [fsState, setFsState] = useState<FileSystemState>({
@@ -30,6 +31,29 @@ const App: React.FC = () => {
   // --- FILE SYSTEM HANDLERS ---
 
   const handleMountWorkspace = async () => {
+    setErrorMessage(null);
+
+    // 1. PRE-CHECK: Iframe / Preview Environment
+    // File System Access API is strictly blocked in cross-origin iframes.
+    // We detect this early to give a helpful message instead of a crash.
+    let isIframe = false;
+    try {
+        isIframe = window.self !== window.top;
+    } catch (e) {
+        isIframe = true;
+    }
+
+    if (isIframe) {
+         setErrorMessage("PREVIEW MODE DETECTED: Browser security blocks disk access in this preview frame. Please open this app in a NEW TAB (↗) to connect your workspace.");
+         return;
+    }
+
+    // 2. Check browser support
+    if (!('showDirectoryPicker' in window)) {
+        setErrorMessage("SYSTEM ERROR: File System Access API not supported in this browser context. Please use Chrome, Edge, or Opera on Desktop.");
+        return;
+    }
+
     try {
       // @ts-ignore - File System Access API
       const dirHandle = await window.showDirectoryPicker({
@@ -52,8 +76,20 @@ const App: React.FC = () => {
           }]);
           setMode(NeuralMode.WORKSPACE);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Mount cancelled or failed", err);
+      
+      if (err.name === 'AbortError') {
+          // User simply cancelled the picker, no error needed
+          return;
+      }
+
+      // Handle the specific "Cross origin sub frames" error just in case pre-check misses edge cases
+      if (err.message && err.message.includes('Cross origin sub frames')) {
+          setErrorMessage("SECURITY RESTRICTION: Please Open App in a New Tab (Full Window) to grant disk access.");
+      } else {
+          setErrorMessage(`MOUNT ERROR: ${err.message}`);
+      }
     }
   };
 
@@ -218,7 +254,7 @@ const App: React.FC = () => {
     } finally {
       setIsProcessing(false);
     }
-  }, [inputValue, capturedImage, isProcessing, messages, fsState.handle]); // Added handle dependency
+  }, [inputValue, capturedImage, isProcessing, messages, fsState.handle]); 
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -229,6 +265,22 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen bg-arkaios-900 text-slate-200 font-sans overflow-hidden relative">
+      {/* Error Banner */}
+      {errorMessage && (
+          <div className="absolute top-16 left-1/2 transform -translate-x-1/2 z-50 bg-red-900/95 border border-red-500 text-red-100 px-6 py-4 rounded-lg shadow-2xl backdrop-blur-md flex items-start gap-4 animate-in fade-in slide-in-from-top-4 max-w-xl">
+              <div className="bg-red-500/20 p-2 rounded-full shrink-0">
+                <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+              </div>
+              <div className="flex flex-col flex-1">
+                <span className="font-bold font-mono text-sm tracking-wider text-red-300 mb-1">ACCESS BLOCKED</span>
+                <span className="text-sm leading-relaxed">{errorMessage}</span>
+              </div>
+              <button onClick={() => setErrorMessage(null)} className="text-red-300 hover:text-white hover:bg-red-800/50 rounded p-1 transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+          </div>
+      )}
+
       {/* Header */}
       <header className="h-14 border-b border-slate-800 bg-black/20 backdrop-blur-md flex items-center justify-between px-4 shrink-0 z-10">
         <div className="flex items-center space-x-3">
@@ -252,9 +304,9 @@ const App: React.FC = () => {
            {!fsState.handle ? (
                <button 
                 onClick={handleMountWorkspace}
-                className="px-3 py-1 rounded bg-arkaios-800 border border-slate-700 text-[10px] font-mono text-slate-300 hover:border-arkaios-glow hover:text-arkaios-glow transition-all flex items-center gap-1"
+                className="px-3 py-1 rounded bg-arkaios-800 border border-slate-700 text-[10px] font-mono text-slate-300 hover:border-arkaios-glow hover:text-arkaios-glow transition-all flex items-center gap-1 group"
                >
-                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" /></svg>
+                 <svg className="w-3 h-3 group-hover:text-arkaios-glow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" /></svg>
                  CONNECT WORKSPACE
                </button>
            ) : (
