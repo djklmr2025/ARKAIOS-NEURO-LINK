@@ -33,9 +33,11 @@ const App: React.FC = () => {
   const handleMountWorkspace = async () => {
     setErrorMessage(null);
 
-    // 1. PRE-CHECK: Iframe / Preview Environment
-    // File System Access API is strictly blocked in cross-origin iframes.
-    // We detect this early to give a helpful message instead of a crash.
+    // 1. ENVIRONMENT CHECK
+    // We check if we are in Electron or an Iframe.
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isElectron = userAgent.includes('electron');
+    
     let isIframe = false;
     try {
         isIframe = window.self !== window.top;
@@ -43,7 +45,10 @@ const App: React.FC = () => {
         isIframe = true;
     }
 
-    if (isIframe) {
+    // Only block if we are in an iframe AND NOT in Electron.
+    // Electron apps often run top-level, but sometimes UI wrappers make them behave like frames.
+    // If it's Electron, we trust it.
+    if (isIframe && !isElectron) {
          setErrorMessage("PREVIEW MODE DETECTED: Browser security blocks disk access in this preview frame. Please open this app in a NEW TAB (↗) to connect your workspace.");
          return;
     }
@@ -263,6 +268,14 @@ const App: React.FC = () => {
     }
   };
 
+  // Draggable region for Electron
+  const dragRegion = {
+    WebkitAppRegion: 'drag' as const,
+  };
+  const noDragRegion = {
+    WebkitAppRegion: 'no-drag' as const,
+  };
+
   return (
     <div className="flex flex-col h-screen bg-arkaios-900 text-slate-200 font-sans overflow-hidden relative">
       {/* Error Banner */}
@@ -281,8 +294,11 @@ const App: React.FC = () => {
           </div>
       )}
 
-      {/* Header */}
-      <header className="h-14 border-b border-slate-800 bg-black/20 backdrop-blur-md flex items-center justify-between px-4 shrink-0 z-10">
+      {/* Header with Drag Region for Desktop */}
+      <header 
+        style={dragRegion}
+        className="h-14 border-b border-slate-800 bg-black/20 backdrop-blur-md flex items-center justify-between px-4 shrink-0 z-10 pt-2"
+      >
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 rounded bg-gradient-to-br from-arkaios-accent to-blue-600 flex items-center justify-center shadow-[0_0_15px_rgba(6,182,212,0.3)]">
              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
@@ -300,7 +316,7 @@ const App: React.FC = () => {
           </div>
         </div>
         
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2" style={noDragRegion}>
            {!fsState.handle ? (
                <button 
                 onClick={handleMountWorkspace}
