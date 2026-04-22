@@ -100,9 +100,7 @@ const App: React.FC = () => {
 
   // Tool Execution Logic
   const executeTools = async (functionCalls: any[]): Promise<any[]> => {
-    const responses = [];
-    
-    for (const call of functionCalls) {
+    return Promise.all(functionCalls.map(async (call) => {
         const { name, args } = call;
         let result = "";
 
@@ -139,14 +137,13 @@ const App: React.FC = () => {
             result = `Error executing ${name}: ${err.message}`;
         }
 
-        responses.push({
+        return {
             functionResponse: {
                 name: name,
                 response: { result: result }
             }
-        });
-    }
-    return responses;
+        };
+    }));
   };
 
   // --- MAIN MESSAGE HANDLER ---
