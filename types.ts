@@ -15,13 +15,6 @@ export interface Message {
   functionResponses?: any[];
 }
 
-export interface SystemStatus {
-  isRecording: boolean;
-  isScreenSharing: boolean;
-  isProcessing: boolean;
-  connectionStatus: 'connected' | 'disconnected' | 'connecting';
-}
-
 export enum NeuralMode {
   CHAT = 'CHAT',
   VISION = 'VISION', // Screen analysis
