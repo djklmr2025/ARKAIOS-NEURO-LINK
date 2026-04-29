@@ -22,12 +22,6 @@ export interface SystemStatus {
   connectionStatus: 'connected' | 'disconnected' | 'connecting';
 }
 
-export enum NeuralMode {
-  CHAT = 'CHAT',
-  VISION = 'VISION', // Screen analysis
-  WORKSPACE = 'WORKSPACE' // File system access
-}
-
 export interface FileSystemState {
   handle: any | null; // FileSystemDirectoryHandle
   path: string | null;
