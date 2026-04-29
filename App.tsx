@@ -151,7 +151,7 @@ const App: React.FC = () => {
   const processResponse = async (response: GenerateContentResponse, currentHistory: Message[]) => {
       // 1. Check for Tool Calls (Function Calls)
       const candidates = response.candidates;
-      const functionCalls = candidates?.[0]?.content?.parts?.filter(p => p.functionCall).map(p => p.functionCall);
+      const functionCalls = candidates?.[0]?.content?.parts?.reduce((acc: any[], p) => { if (p.functionCall) acc.push(p.functionCall); return acc; }, []);
       const textResponse = response.text; // Helper to get text if exists
 
       // If there is text, add it to chat
