@@ -1,4 +1,5 @@
 import React from 'react';
+import { Eye, X } from 'lucide-react';
 
 interface VisionPanelProps {
   previewImage: string | null;
@@ -6,7 +7,14 @@ interface VisionPanelProps {
 }
 
 export const VisionPanel: React.FC<VisionPanelProps> = ({ previewImage, onClear }) => {
-  if (!previewImage) return null;
+  if (!previewImage) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-cyber-blue/30 p-8 text-center">
+        <Eye size={48} className="mb-4 opacity-50" />
+        <p className="font-mono text-sm tracking-widest uppercase">Vision Matrix Offline</p>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full bg-arkaios-800 border-b border-slate-700 p-2 animate-in fade-in slide-in-from-top-4 duration-300">
@@ -17,8 +25,9 @@ export const VisionPanel: React.FC<VisionPanelProps> = ({ previewImage, onClear 
         <button 
             onClick={onClear}
             className="text-xs text-slate-400 hover:text-red-400 transition-colors"
+            aria-label="Discard"
         >
-            [DISCARD]
+            <X size={16} />
         </button>
       </div>
       <div className="relative rounded overflow-hidden border border-arkaios-accent/30 group">
