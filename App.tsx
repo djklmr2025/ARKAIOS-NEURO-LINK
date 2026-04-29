@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { sendNeuralMessage } from './services/geminiService';
-import { Message, MessageRole, NeuralMode, FileSystemState } from './types';
+import { Message, MessageRole, FileSystemState } from './types';
 import { ChatPanel } from './components/ChatPanel';
 import { VisionPanel } from './components/VisionPanel';
 import { GenerateContentResponse } from '@google/genai';
@@ -9,7 +9,6 @@ import { GenerateContentResponse } from '@google/genai';
 const generateId = () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 
 const App: React.FC = () => {
-  const [mode, setMode] = useState<NeuralMode>(NeuralMode.CHAT);
   const [messages, setMessages] = useState<Message[]>([{
       id: generateId(),
       role: MessageRole.MODEL,
@@ -79,7 +78,6 @@ const App: React.FC = () => {
               text: `>> LOCAL WORKSPACE MOUNTED: ./${dirHandle.name}\n>> ACCESS: READ/WRITE\n>> AGENT AUTHORIZED`,
               timestamp: Date.now()
           }]);
-          setMode(NeuralMode.WORKSPACE);
       }
     } catch (err: any) {
       console.error("Mount cancelled or failed", err);
@@ -214,7 +212,6 @@ const App: React.FC = () => {
         context.drawImage(bitmap, 0, 0, bitmap.width, bitmap.height);
         const base64Image = canvas.toDataURL('image/png');
         setCapturedImage(base64Image);
-        setMode(NeuralMode.VISION);
       }
       videoTrack.stop();
     } catch (err) {
