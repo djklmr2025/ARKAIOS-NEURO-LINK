@@ -109,7 +109,17 @@ export const sendNeuralMessage = async (
     // without managing full ChatSession complexity for tools in this snippet.
     let systemContext = "";
     if (history.length > 0 && !toolResponses) {
-       const recent = history.slice(-4).filter(m => m.text).map(h => `[${h.role.toUpperCase()}]: ${h.text}`).join('\n');
+       let recent = '';
+       let first = true;
+       const startIdx = Math.max(0, history.length - 4);
+       for (let i = startIdx; i < history.length; i++) {
+           const h = history[i];
+           if (h.text) {
+               if (!first) recent += '\n';
+               recent += `[${h.role.toUpperCase()}]: ${h.text}`;
+               first = false;
+           }
+       }
        systemContext = `PREVIOUS CONTEXT:\n${recent}\n\nCURRENT REQUEST:\n`;
        // Prepend context to the user text part if it exists
        const textPart = parts.find(p => p.text);
