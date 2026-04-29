@@ -1,8 +1,5 @@
-import { GoogleGenAI, GenerateContentResponse, FunctionDeclaration, Type } from "@google/genai";
+import { FunctionDeclaration, Type } from "@google/genai";
 import { Message } from "../types";
-
-// Initialize Gemini Client
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
 const SYSTEM_INSTRUCTION = `
 You are the Arkaios Neural Agent (ANA).
@@ -74,7 +71,7 @@ export const sendNeuralMessage = async (
   currentPrompt: string | null, 
   imageBase64?: string,
   toolResponses?: any[]
-): Promise<GenerateContentResponse> => {
+): Promise<any> => {
   
   try {
     const model = 'gemini-2.5-flash';
@@ -120,15 +117,16 @@ export const sendNeuralMessage = async (
        }
     }
 
-    const response: GenerateContentResponse = await ai.models.generateContent({
+    // Proxy the request through Electron's IPC bridge
+    const response = await (window as any).electronAPI.generateContent({
       model: model,
       contents: {
-        role: toolResponses ? 'function' : 'user', // 'function' role isn't standard in top-level contents, but 'parts' handles it
+        role: toolResponses ? 'function' : 'user',
         parts: parts
       },
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
-        temperature: 0.4, // Lower temperature for precise file operations
+        temperature: 0.4,
         tools: [{ functionDeclarations: fileSystemTools }],
       }
     });
