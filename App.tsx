@@ -21,6 +21,8 @@ const App: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
   // File System State
   const [fsState, setFsState] = useState<FileSystemState>({
     handle: null,
@@ -206,7 +208,10 @@ const App: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 500));
       
       const bitmap = await imageCapture.grabFrame();
-      const canvas = document.createElement('canvas');
+      if (!canvasRef.current) {
+        canvasRef.current = document.createElement('canvas');
+      }
+      const canvas = canvasRef.current;
       canvas.width = bitmap.width;
       canvas.height = bitmap.height;
       const context = canvas.getContext('2d');
