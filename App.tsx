@@ -1,9 +1,9 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { sendNeuralMessage } from './services/geminiService';
 import { Message, MessageRole, NeuralMode, FileSystemState } from './types';
-import { ChatPanel } from './components/ChatPanel';
 import { VisionPanel } from './components/VisionPanel';
 import { GenerateContentResponse } from '@google/genai';
+import { Message } from './types';
 
 // Simple ID generator
 const generateId = () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -148,7 +148,7 @@ const App: React.FC = () => {
 
   // --- MAIN MESSAGE HANDLER ---
 
-  const processResponse = async (response: GenerateContentResponse, currentHistory: Message[]) => {
+  const processResponse = async (response: any, currentHistory: Message[]) => {
       // 1. Check for Tool Calls (Function Calls)
       const candidates = response.candidates;
       const functionCalls = candidates?.[0]?.content?.parts?.filter(p => p.functionCall).map(p => p.functionCall);

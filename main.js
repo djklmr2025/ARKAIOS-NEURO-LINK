@@ -1,5 +1,12 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const dotenv = require('dotenv');
+const { GoogleGenAI } = require('@google/genai');
+
+// Load environment variables from .env.local
+dotenv.config({ path: path.join(__dirname, '.env.local') });
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
 function createWindow() {
   // Create the browser window.
@@ -11,7 +18,8 @@ function createWindow() {
       nodeIntegration: false, // Security: keep false
       contextIsolation: true, // Security: keep true
       sandbox: false, // Allow File System Access API
-      webSecurity: true
+      webSecurity: true,
+      preload: path.join(__dirname, 'preload.js') // Attach preload script
     },
     autoHideMenuBar: true,
     titleBarStyle: 'hidden', // Modern borderless look
@@ -33,6 +41,21 @@ function createWindow() {
 
 // This method will be called when Electron has finished initialization
 app.whenReady().then(() => {
+  // Setup IPC handler for generating content
+  ipcMain.handle('generate-content', async (event, args) => {
+    try {
+      const response = await ai.models.generateContent(args);
+      // Return a plain object to avoid IPC serialization errors
+      return {
+        text: response.text,
+        candidates: response.candidates
+      };
+    } catch (error) {
+      console.error("IPC Error generating content:", error);
+      throw error;
+    }
+  });
+
   createWindow();
 
   app.on('activate', function () {
